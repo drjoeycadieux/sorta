@@ -4,6 +4,7 @@ import { CalendarDays, CarFront, Check, ChevronDown, Clock3, MapPin, Pencil, Pho
 import './styles.css'
 
 const emptyForm = { customerName: '', customerPhone: '', pickup: '', destination: '', rideDate: '', rideTime: '', vehicle: 'Standard', status: 'upcoming', notes: '' }
+const apiUrl = (path) => `${import.meta.env.VITE_API_URL || ''}${path}`
 
 async function readApiResponse(response) {
   const contentType = response.headers.get('content-type') || ''
@@ -41,7 +42,7 @@ function App() {
 
   const loadReservations = async () => {
     try {
-      const response = await fetch('/api/reservations')
+      const response = await fetch(apiUrl('/api/reservations'))
       setReservations(await readApiResponse(response))
     } catch (error) {
       setNotice(error.message === 'api-unavailable' ? 'The reservation API is not deployed yet. Deploy the Netlify Function and configure its database.' : 'The reservation API cannot reach MySQL. Check its database environment variables and run db/schema.sql.')
@@ -70,7 +71,7 @@ function App() {
   const submitReservation = async (event) => {
     event.preventDefault()
     setNotice('')
-    const endpoint = editingId ? `/api/reservations/${editingId}` : '/api/reservations'
+    const endpoint = editingId ? apiUrl(`/api/reservations/${editingId}`) : apiUrl('/api/reservations')
     try {
       const response = await fetch(endpoint, { method: editingId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
       const saved = await readApiResponse(response)
@@ -90,13 +91,13 @@ function App() {
 
   const cancelReservation = async (id) => {
     if (!window.confirm('Cancel this reservation?')) return
-    const response = await fetch(`/api/reservations/${id}/cancel`, { method: 'PATCH' })
+    const response = await fetch(apiUrl(`/api/reservations/${id}/cancel`), { method: 'PATCH' })
     if (response.ok) { setReservations((current) => current.map((item) => item.id === id ? { ...item, status: 'cancelled' } : item)); setNotice('Reservation cancelled.') }
   }
 
   const deleteReservation = async (id) => {
     if (!window.confirm('Permanently delete this reservation?')) return
-    const response = await fetch(`/api/reservations/${id}`, { method: 'DELETE' })
+    const response = await fetch(apiUrl(`/api/reservations/${id}`), { method: 'DELETE' })
     if (response.ok) { setReservations((current) => current.filter((item) => item.id !== id)); setNotice('Reservation deleted.') }
   }
 
