@@ -18,7 +18,7 @@ Requirements: Node.js 18+ and MySQL 8+.
    mysql -u root -p < db/schema.sql
    ```
 
-3. Copy `.env.example` to `.env` and set the MySQL connection values. The API also accepts these values directly as environment variables.
+3. Copy `.env.example` to `.env` and set the MySQL connection values. The API loads this file automatically. It also accepts these values directly as environment variables.
 
 4. Start the client and API together:
 
@@ -27,6 +27,8 @@ Requirements: Node.js 18+ and MySQL 8+.
    ```
 
 Open `http://localhost:5173` for the dashboard. Opening `http://localhost:3001` redirects there as well; port 3001 is the Express API.
+
+Check the database connection at `http://localhost:3001/api/health`. A connected setup returns `"database": "mysql"`. If it returns `"memory-fallback"`, reservations are temporary and are not being written to MySQL.
 
 The Vite development server proxies `/api` requests to the same origin in development only when the API is available at port `3001`; the frontend currently uses relative API paths, so run both processes with `npm run dev`.
 

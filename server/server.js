@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import cors from 'cors'
 import express from 'express'
 import mysql from 'mysql2/promise'
@@ -24,7 +25,15 @@ app.use(express.json())
 const fields = 'id, customer_name AS customerName, customer_phone AS customerPhone, pickup, destination, ride_date AS rideDate, ride_time AS rideTime, vehicle, status, notes, created_at AS createdAt'
 
 app.get('/', (_request, response) => response.redirect('http://localhost:5173/'))
-app.get('/api/health', (_request, response) => response.json({ ok: true }))
+app.get('/api/health', async (_request, response) => {
+  try {
+    await pool.query('SELECT 1')
+    databaseAvailable = true
+  } catch {
+    databaseAvailable = false
+  }
+  response.json({ ok: true, database: databaseAvailable ? 'mysql' : 'memory-fallback' })
+})
 
 app.get('/api/reservations', async (_request, response) => {
   try {
