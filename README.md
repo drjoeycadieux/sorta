@@ -28,7 +28,11 @@ Requirements: Node.js 18+ and MySQL 8+.
 
 Open `http://localhost:5173` for the dashboard. Opening `http://localhost:3001` redirects there as well; port 3001 is the Express API.
 
-Check the database connection at `http://localhost:3001/api/health`. A connected setup returns `"database": "mysql"`. If it returns `"memory-fallback"`, reservations are temporary and are not being written to MySQL.
+Check the local database connection at `http://localhost:3001/api/health`. A connected setup returns `"database": "mysql"`. If it returns `"memory-fallback"`, reservations are temporary and are not being written to MySQL.
+
+## Netlify deployment
+
+Netlify uses `netlify/functions/api.js` for the production API. Add `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME` under Netlify site environment variables, then redeploy. The MySQL server must be externally reachable by Netlify; a local MySQL server is not accessible from a deployed function.
 
 The Vite development server proxies `/api` requests to the same origin in development only when the API is available at port `3001`; the frontend currently uses relative API paths, so run both processes with `npm run dev`.
 
