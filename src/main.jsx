@@ -5,6 +5,13 @@ import './styles.css'
 
 const emptyForm = { customerName: '', customerPhone: '', pickup: '', destination: '', rideDate: '', rideTime: '', vehicle: 'Standard', status: 'upcoming', notes: '' }
 
+async function readApiResponse(response) {
+  const contentType = response.headers.get('content-type') || ''
+  if (!contentType.includes('application/json')) throw new Error('api-unavailable')
+  if (!response.ok) throw new Error('api-error')
+  return response.json()
+}
+
 function formatDate(date) {
   if (!date) return 'Not set'
   return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(`${date}T12:00:00`))
@@ -35,10 +42,9 @@ function App() {
   const loadReservations = async () => {
     try {
       const response = await fetch('/api/reservations')
-      if (!response.ok) throw new Error()
-      setReservations(await response.json())
-    } catch {
-      setNotice('Connect MySQL and run db/schema.sql to load live reservations.')
+      setReservations(await readApiResponse(response))
+    } catch (error) {
+      setNotice(error.message === 'api-unavailable' ? 'The reservation API is not deployed yet. Deploy the Netlify Function and configure its database.' : 'The reservation API cannot reach MySQL. Check its database environment variables and run db/schema.sql.')
     } finally {
       setLoading(false)
     }
@@ -67,12 +73,11 @@ function App() {
     const endpoint = editingId ? `/api/reservations/${editingId}` : '/api/reservations'
     try {
       const response = await fetch(endpoint, { method: editingId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
-      if (!response.ok) throw new Error()
-      const saved = await response.json()
+      const saved = await readApiResponse(response)
       setReservations((current) => editingId ? current.map((item) => item.id === editingId ? saved : item) : [...current, saved])
       resetForm()
       setNotice(editingId ? 'Reservation updated.' : 'Reservation added.')
-    } catch { setNotice('Could not save reservation. Is the API and MySQL database running?') }
+    } catch (error) { setNotice(error.message === 'api-unavailable' ? 'The reservation API is not deployed yet. Deploy the Netlify Function before saving.' : 'Could not save reservation. Check the API database connection.') }
   }
 
   const resetForm = () => { setForm(emptyForm); setEditingId(null) }
